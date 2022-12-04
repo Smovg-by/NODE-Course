@@ -15,7 +15,7 @@ app.use(morgan('combined'))
 app.use(express.json()) //парсит входящий json
 app.use(express.static(path.join(__dirname, '..', 'public')))
 app.use(planetsRouter) // если путь совпадает, выполняет функцию
-app.use(launchesRouter) // если путь совпадает, выполняет функцию
+app.use('/launches', launchesRouter) // если путь совпадает, выполняет функцию
 app.get('/*', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'))
 })

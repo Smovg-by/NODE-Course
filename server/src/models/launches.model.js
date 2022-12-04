@@ -1,21 +1,51 @@
-const launches = new Map()
+const launches = new Map();
+
+let latestFlightNumber = 100; // стейт
+
+function existsLaunchWithId(launchId) {
+    return launches.has(launchId)
+}
 
 const launch = {
     flightNumber: 100,
-    mission: 'Kepler Exploration X',
-    rocket: 'Explorer IS1',
-    launchDate: new Date('December 27, 2030'),
-    destination: 'Kepler-442 b',
-    customer: ['ZTM', 'NASA'],
+    mission: "Kepler Exploration X",
+    rocket: "Explorer IS1",
+    launchDate: new Date("December 27, 2030"),
+    target: "Kepler-442 b",
+    customer: ["ZTM", "NASA"],
     upcoming: true,
     success: true,
-}
+};
 
-launches.set(launch.flightNumber, launch)
+launches.set(launch.flightNumber, launch);
 
 function getAllLaunches() {
-    return [...launches.values()]
+    return [...launches.values()];
 }
 
+function addNewLaunch(launch) {
+    latestFlightNumber++;
+    launches.set(
+        latestFlightNumber,
+        Object.assign(launch, { //мутирует объект в контроллере, поэтому возвращает измененный
+            success: true,
+            upcoming: true,
+            customers: ['Zero to Mastery', 'NASA'],
+            flightNumber: latestFlightNumber,
+        })
+    );
+}
 
-module.exports = { getAllLaunches } 
+function abortLaunchById(launchId) {
+    const aborted = launches.get(launchId)
+    aborted.upcoming = false
+    aborted.success = false
+    return aborted
+}
+
+module.exports = {
+    getAllLaunches,
+    addNewLaunch,
+    existsLaunchWithId,
+    abortLaunchById
+};
