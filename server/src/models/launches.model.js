@@ -3,31 +3,22 @@ const planets = require('./planets.mongo')
 
 const DEFAULT_FLIGHT_NUMBER = 100
 
-function existsLaunchWithId(launchId) {
-    return launches.has(launchId)
+async function existsLaunchWithId(launchId) {
+    return await launchesDatabase.findOne({
+        flightNumber: launchId
+    })
 }
-
-const launch = {
-    flightNumber: 100,
-    mission: "Kepler Exploration X",
-    rocket: "Explorer IS1",
-    launchDate: new Date("December 27, 2030"),
-    target: "Kepler-442 b",
-    customers: ["ZTM", "NASA"],
-    upcoming: true,
-    success: true,
-};
 
 async function getLatestFlightNumber() {
     const latestLaunch = await launchesDatabase
         .findOne()
-        .sort('-flightNumber').flightNumber // встроенный метод MongoDB
+        .sort('-flightNumber') // встроенный метод MongoDB
 
     if (!latestLaunch) {
         return DEFAULT_FLIGHT_NUMBER // если не найдено, начинаем с 100 создавать
     }
 
-    return latestLaunch.flightNumber
+    return latestLaunch.flightNumber + 1
 }
 
 async function getAllLaunches() {
@@ -37,16 +28,15 @@ async function getAllLaunches() {
     })
 }
 
-saveLaunch(launch)
-
 async function saveLaunch(launch) {
+
     const planet = await planets.findOne({
         keplerName: launch.target
     })
     if (!planet) {
         throw new Error('No matching planets found')
     }
-    await launchesDatabase.updateOne(
+    await launchesDatabase.findOneAndUpdate(
         { flightNumber: launch.flightNumber },
         launch,
         { upsert: true },
@@ -54,7 +44,7 @@ async function saveLaunch(launch) {
 }
 
 async function scheduleNewLaunch(launch) {
-    const newFlightNumber = await getLatestFlightNumber() + 1
+    const newFlightNumber = await getLatestFlightNumber()
 
     const newLaunch = Object.assign(launch, {
         success: true,
@@ -65,11 +55,14 @@ async function scheduleNewLaunch(launch) {
     saveLaunch(newLaunch)
 }
 
-function abortLaunchById(launchId) {
-    const aborted = launches.get(launchId)
-    aborted.upcoming = false
-    aborted.success = false
-    return aborted
+async function abortLaunchById(launchId) {
+    const aborted = await launchesDatabase.updateOne({
+        flightNumber: launchId
+    }, {
+        upcoming: false,
+        success: false
+    })
+    return aborted.modifiedCount === 1 // modifiedCount приходит по дефолту от mongoDB
 }
 
 module.exports = {

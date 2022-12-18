@@ -30,15 +30,23 @@ async function httpAddNewLaunch(req, res) {
     return res.status(201).json(launch);
 }
 
-function httpAbortLaunch(req, res) {
+async function httpAbortLaunch(req, res) {
     const launchId = Number(req.params.id);
+    // проверяем, есть ли такой лаунч
+    const existsLaunch = await existsLaunchWithId(launchId)
 
-    if (!existsLaunchWithId(launchId)) {
+    if (!existsLaunch) {
         return res.status(404).json({ error: "Launch not found" });
     }
-
-    const aborted = abortLaunchById(launchId);
-    return res.status(201).json(aborted);
+    // пробуем отменить лайнч (апдейт, не удаление)
+    const aborted = await abortLaunchById(launchId);
+    if (!aborted) {
+        return res.status(400).json({ error: "Launch not aborted" });
+    }
+    // если все ок - отправляем ok на фронт
+    return res.status(201).json({
+        ok: true
+    });
 }
 
 module.exports = {
