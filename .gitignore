@@ -1,0 +1,4 @@
+node_modules
+~$*.docx
+~*.tmp
+.env
